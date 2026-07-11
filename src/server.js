@@ -1,5 +1,5 @@
 const app = require("./app");
-const logger = require("./logger");
+const logger = require("./utils/logger");
 const { attachWebSocketServer } = require("./services/websocketServer");
 
 const PORT = process.env.PORT || 3000;
