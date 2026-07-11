@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title><%= restaurantName %> — Order Chat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-mark">01</span>
+        <div class="brand-text">
+          <h1><%= restaurantName %></h1>
+          <p>order chat</p>
+        </div>
+      </div>
+      <span class="status-dot" title="connected"></span>
+    </header>
+
+    <main id="chat-log" class="chat-log" aria-live="polite">
+      <div class="msg bot"><%= initialMessage %></div>
+    </main>
+
+    <form id="chat-form" class="chat-input" autocomplete="off">
+      <input
+        id="chat-input"
+        type="text"
+        inputmode="text"
+        placeholder="Type an option number…"
+        aria-label="Your reply"
+      />
+      <button type="submit">Send</button>
+    </form>
+  </div>
+
+  <script src="/chat.js"></script>
+</body>
+</html>
