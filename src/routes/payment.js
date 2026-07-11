@@ -6,12 +6,7 @@ const logger = require("../utils/logger");
 
 const router = express.Router();
 
-// GET /api/payment/callback — Paystack redirects the browser here after
-// checkout. This is UX only: it verifies once more so the banner can show
-// up immediately, but routes/webhook.js is the real source of truth, since
-// a customer can close the tab before this redirect ever fires.
-// completeOrder() is idempotent, so whichever of webhook/callback lands
-// first "wins" and the other is a safe no-op.
+// GET /api/payment/callback
 router.get("/callback", async (req, res) => {
   const { reference } = req.query;
   if (!reference) return res.redirect("/?payment=error");
