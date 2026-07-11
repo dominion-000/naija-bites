@@ -20,7 +20,7 @@ describe('POST /api/chat/message', () => {
     expect(res.status).toBe(400);
   });
 
-  test('walks browsing -> add item -> checkout -> pay, initializing payment', async () => {
+  test('walks browsing -> add item -> checkout -> email -> pay, initializing payment', async () => {
     const agent = request.agent(app); // persists the session cookie across calls
     await agent.get('/'); // establishes the device session
 
@@ -28,6 +28,10 @@ describe('POST /api/chat/message', () => {
     await agent.post('/api/chat/message').send({ input: '3' }); // Fried Plantain
     const checkout = await agent.post('/api/chat/message').send({ input: '99' });
     expect(checkout.body.message).toMatch(/Order placed/);
+    expect(checkout.body.message).toMatch(/What email/);
+
+    const email = await agent.post('/api/chat/message').send({ input: 'customer@example.com' });
+    expect(email.body.message).toMatch(/receipt goes to customer@example.com/);
 
     axios.post.mockResolvedValueOnce({
       data: { data: { authorization_url: 'https://paystack.test/pay/abc' } },
@@ -44,6 +48,7 @@ describe('POST /api/chat/message', () => {
     await agent.post('/api/chat/message').send({ input: '1' });
     await agent.post('/api/chat/message').send({ input: '3' });
     await agent.post('/api/chat/message').send({ input: '99' });
+    await agent.post('/api/chat/message').send({ input: 'customer@example.com' });
 
     axios.post.mockRejectedValueOnce(new Error('network down'));
 

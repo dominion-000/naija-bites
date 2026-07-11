@@ -75,14 +75,38 @@ describe("chatEngine state machine", () => {
     expect(session.pendingItem.optionIndex).toBe(0);
   });
 
-  test("checkout moves the cart into a pending order and clears the cart", () => {
+  test("checkout moves the cart into a pending order and asks for an email", () => {
     const session = newSession();
     processInput(session, "1");
     processInput(session, "3"); // Fried Plantain -> cart, ₦800
     const result = processInput(session, "99");
     expect(result.message).toMatch(/Order placed! Total: ₦800/);
+    expect(result.message).toMatch(/What email should we send your receipt to/);
     expect(session.cart).toEqual([]);
     expect(session.currentOrder.status).toBe("pending_payment");
+    expect(session.currentOrder.email).toBeNull();
+    expect(session.state).toBe("AWAITING_EMAIL");
+  });
+
+  test("an invalid email re-prompts without advancing to payment", () => {
+    const session = newSession();
+    processInput(session, "1");
+    processInput(session, "3");
+    processInput(session, "99");
+    const result = processInput(session, "not-an-email");
+    expect(result.message).toMatch(/doesn't look like a valid email/);
+    expect(session.state).toBe("AWAITING_EMAIL");
+    expect(session.currentOrder.email).toBeNull();
+  });
+
+  test("a valid email is stored and moves the session to AWAITING_PAYMENT", () => {
+    const session = newSession();
+    processInput(session, "1");
+    processInput(session, "3");
+    processInput(session, "99");
+    const result = processInput(session, "Customer@Example.com");
+    expect(result.message).toMatch(/receipt goes to customer@example.com/);
+    expect(session.currentOrder.email).toBe("customer@example.com");
     expect(session.state).toBe("AWAITING_PAYMENT");
   });
 
@@ -108,6 +132,7 @@ describe("chatEngine state machine", () => {
     processInput(session, "1");
     processInput(session, "3");
     processInput(session, "99");
+    processInput(session, "customer@example.com"); // clears AWAITING_EMAIL first
 
     const bad = processInput(session, "schedule tomorrow");
     expect(bad.message).toMatch(/Reply "pay"/);
@@ -122,6 +147,7 @@ describe("chatEngine state machine", () => {
     processInput(session, "1");
     processInput(session, "3");
     processInput(session, "99");
+    processInput(session, "customer@example.com"); // clears AWAITING_EMAIL first
     const result = processInput(session, "pay");
     expect(result.action).toBe("INITIATE_PAYMENT");
   });
