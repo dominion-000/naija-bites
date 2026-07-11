@@ -8,7 +8,8 @@
 //   MAIN_MENU       -> the `1 / 99 / 98 / 97 / 0` top-level options
 //   BROWSING        -> customer is picking items from the menu
 //   CHOOSING_OPTION -> customer is walking through an item's sub-option
-//   AWAITING_PAYMENT -> order is checked out, waiting on "pay" / "schedule"
+//   AWAITING_EMAIL   -> order placed, waiting on a valid email for the receipt
+//   AWAITING_PAYMENT -> email captured, waiting on "pay" / "schedule"
 
 const crypto = require("crypto");
 const MENU = require("./menu");
@@ -71,14 +72,15 @@ function handleCheckout(session) {
     status: "pending_payment",
     scheduledFor: null,
     reference: null,
+    email: null,
     createdAt: new Date().toISOString(),
   };
   session.cart = [];
-  session.state = "AWAITING_PAYMENT";
+  session.state = "AWAITING_EMAIL";
   return {
     message:
       `Order placed! Total: \u20a6${total}.\n\n` +
-      `Reply "pay" to pay now, or "schedule HH:MM" to schedule this order for later, or 0 to cancel.`,
+      `What email should we send your receipt to?`,
   };
 }
 
@@ -235,6 +237,29 @@ function handleOptionChoice(session, input) {
   };
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Handle Email
+function handleAwaitingEmail(session, input) {
+  const trimmed = input.trim();
+
+  if (trimmed === "0") {
+    return handleCancel(session);
+  }
+
+  if (!EMAIL_RE.test(trimmed)) {
+    return {
+      message: `"${trimmed}" doesn't look like a valid email. What email should we send your receipt to? (or 0 to cancel)`,
+    };
+  }
+
+  session.currentOrder.email = trimmed.toLowerCase();
+  session.state = "AWAITING_PAYMENT";
+  return {
+    message: `Got it — receipt goes to ${session.currentOrder.email}.\n\nReply "pay" to pay now, or "schedule HH:MM" to schedule this order for later, or 0 to cancel.`,
+  };
+}
+
 const SCHEDULE_RE = /^schedule\s+(\d{1,2}:\d{2})$/i;
 
 // Handle Payment
@@ -280,6 +305,8 @@ function processInput(session, rawInput) {
       return handleBrowsing(session, input);
     case "CHOOSING_OPTION":
       return handleOptionChoice(session, input);
+    case "AWAITING_EMAIL":
+      return handleAwaitingEmail(session, input);
     case "AWAITING_PAYMENT":
       return handleAwaitingPayment(session, input);
     case "MAIN_MENU":

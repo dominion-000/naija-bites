@@ -17,7 +17,7 @@ async function handleChatMessage(session, input, baseUrl) {
 
   try {
     const payment = await initializeTransaction({
-      email: "dominionthedeveloper@gmail.com",
+      email: order.email,
       amountKobo: order.total * 100,
       reference,
       callback_url: `${baseUrl}/api/payment/callback`,
