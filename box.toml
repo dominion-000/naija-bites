@@ -1,0 +1,17 @@
+[box]
+name = "runbox"
+version = "1"
+
+[tools]
+node = ">=20.0"
+
+[shell]
+mode = "isolated"
+
+[isolation]
+mode = "normal"
+binary_strategy = "hybrid"
+
+[sandbox]
+level = "weak"
+network = true
